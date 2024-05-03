@@ -1,0 +1,60 @@
+const fs = require('fs')
+const globby = require('globby')
+
+function addPage(page) {
+  const path = page.replace('app', '').replace('/[locale]', '').replace('/page', '').replace('.tsx', '').replace('.mdx', '')
+  const route = path === '/page' ? '' : path
+
+  return `  <url>
+    <loc>${`${process.env.NEXT_PUBLIC_API_URL}/en${route}`}</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>`
+}
+
+// function addPageTH(page) {
+
+//   const path = page.replace('app', '').replace('/[locale]', '').replace('/page', '').replace('.tsx', '').replace('.mdx', '')
+//   const route = path === '/page' ? '' : path
+
+//   return `  <url>
+//     <loc>${`${process.env.NEXT_PUBLIC_API_URL}/th${route}`}</loc>
+//     <lastmod>${new Date().toISOString()}</lastmod>
+//     <changefreq>monthly</changefreq>
+//     <priority>1.0</priority>
+//   </url>`
+// }
+
+// function addPageCN(page) {
+
+//   const path = page.replace('app', '').replace('/[locale]', '').replace('/page', '').replace('.tsx', '').replace('.mdx', '')
+//   const route = path === '/page' ? '' : path
+
+//   return `  <url>
+//     <loc>${`${process.env.NEXT_PUBLIC_API_URL}/cn${route}`}</loc>
+//     <lastmod>${new Date().toISOString()}</lastmod>
+//     <changefreq>monthly</changefreq>
+//     <priority>1.0</priority>
+//   </url>`
+// }
+
+
+
+async function generateSitemap() {
+  // excludes Nexttsx files and API routes.
+  const pages = await globby([
+    'app/[locale]/**/page{.tsx,.mdx}',
+    '!app/[locale]/_*.tsx',
+    '!app/[locale]/api',
+  ])
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  ${pages.map(addPage).join('\n')}
+
+  </urlset>`
+
+  fs.writeFileSync('app/[locale]/sitemap.xml', sitemap)
+}
+
+generateSitemap()
